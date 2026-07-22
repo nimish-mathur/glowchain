@@ -2,14 +2,16 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { IncidentService } from './services/IncidentService'
 import IncidentList from './components/IncidentList'
 import IncidentForm from './components/IncidentForm'
+import type { IncidentFormData, IncidentRecord } from './types'
+import { rawValue } from './types'
 import './app.css'
 
 export default function App() {
-    const [incidents, setIncidents] = useState([])
+    const [incidents, setIncidents] = useState<IncidentRecord[]>([])
     const [loading, setLoading] = useState(true)
     const [showForm, setShowForm] = useState(false)
-    const [selectedIncident, setSelectedIncident] = useState(null)
-    const [error, setError] = useState(null)
+    const [selectedIncident, setSelectedIncident] = useState<IncidentRecord | null>(null)
+    const [error, setError] = useState<string | null>(null)
 
     const incidentService = useMemo(() => new IncidentService(), [])
 
@@ -20,7 +22,7 @@ export default function App() {
             const data = await incidentService.list()
             setIncidents(data)
         } catch (err) {
-            setError('Failed to load incidents: ' + (err.message || 'Unknown error'))
+            setError('Failed to load incidents: ' + (err instanceof Error ? err.message : 'Unknown error'))
             console.error(err)
         } finally {
             setLoading(false)
@@ -36,7 +38,7 @@ export default function App() {
         setShowForm(true)
     }
 
-    const handleEditClick = (incident) => {
+    const handleEditClick = (incident: IncidentRecord) => {
         setSelectedIncident(incident)
         setShowForm(true)
     }
@@ -46,22 +48,18 @@ export default function App() {
         setSelectedIncident(null)
     }
 
-    const handleFormSubmit = async (formData) => {
+    const handleFormSubmit = async (formData: IncidentFormData) => {
         setLoading(true)
         try {
             if (selectedIncident) {
-                const sysId =
-                    typeof selectedIncident.sys_id === 'object'
-                        ? selectedIncident.sys_id.value
-                        : selectedIncident.sys_id
-                await incidentService.update(sysId, formData)
+                await incidentService.update(rawValue(selectedIncident.sys_id), formData)
             } else {
                 await incidentService.create(formData)
             }
             setShowForm(false)
             await refreshIncidents()
         } catch (err) {
-            setError('Failed to save incident: ' + (err.message || 'Unknown error'))
+            setError('Failed to save incident: ' + (err instanceof Error ? err.message : 'Unknown error'))
             console.error(err)
         } finally {
             setLoading(false)

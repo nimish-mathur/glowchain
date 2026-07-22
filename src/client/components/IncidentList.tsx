@@ -1,24 +1,33 @@
 import React from 'react'
 import './IncidentList.css'
+import type { FieldValue, IncidentRecord } from '../types'
+import { rawValue, displayValue } from '../types'
+import type { IncidentService } from '../services/IncidentService'
 
-export default function IncidentList({ incidents, onEdit, onRefresh, service }) {
-    const handleDelete = async (incident) => {
-        if (!confirm(`Are you sure you want to delete ${incident.number.display_value}?`)) {
+interface IncidentListProps {
+    incidents: IncidentRecord[]
+    onEdit: (incident: IncidentRecord) => void
+    onRefresh: () => void
+    service: IncidentService
+}
+
+export default function IncidentList({ incidents, onEdit, onRefresh, service }: IncidentListProps) {
+    const handleDelete = async (incident: IncidentRecord) => {
+        if (!confirm(`Are you sure you want to delete ${displayValue(incident.number)}?`)) {
             return
         }
 
         try {
-            const sysId = typeof incident.sys_id === 'object' ? incident.sys_id.value : incident.sys_id
-            await service.delete(sysId)
+            await service.delete(rawValue(incident.sys_id))
             onRefresh()
         } catch (error) {
             console.error('Failed to delete incident:', error)
-            alert('Failed to delete incident: ' + (error.message || 'Unknown error'))
+            alert('Failed to delete incident: ' + (error instanceof Error ? error.message : 'Unknown error'))
         }
     }
 
-    const getStateClass = (state) => {
-        const stateValue = typeof state === 'object' ? state.display_value : state
+    const getStateClass = (state: FieldValue) => {
+        const stateValue = displayValue(state)
 
         switch (stateValue) {
             case 'New':
@@ -36,8 +45,8 @@ export default function IncidentList({ incidents, onEdit, onRefresh, service }) 
         }
     }
 
-    const getImpactClass = (impact) => {
-        const impactValue = typeof impact === 'object' ? impact.value : impact
+    const getImpactClass = (impact: FieldValue) => {
+        const impactValue = rawValue(impact)
 
         switch (impactValue) {
             case '1':
@@ -70,23 +79,14 @@ export default function IncidentList({ incidents, onEdit, onRefresh, service }) 
                     <tbody>
                         {incidents.map((incident) => {
                             // Extract primitive values from potential objects
-                            const number =
-                                typeof incident.number === 'object' ? incident.number.display_value : incident.number
-                            const shortDesc =
-                                typeof incident.short_description === 'object'
-                                    ? incident.short_description.display_value
-                                    : incident.short_description
-                            const state =
-                                typeof incident.state === 'object' ? incident.state.display_value : incident.state
-                            const impact =
-                                typeof incident.impact === 'object' ? incident.impact.display_value : incident.impact
-                            const openedAt =
-                                typeof incident.opened_at === 'object'
-                                    ? incident.opened_at.display_value
-                                    : incident.opened_at
+                            const number = displayValue(incident.number)
+                            const shortDesc = displayValue(incident.short_description)
+                            const state = displayValue(incident.state)
+                            const impact = displayValue(incident.impact)
+                            const openedAt = displayValue(incident.opened_at)
 
                             return (
-                                <tr key={typeof incident.sys_id === 'object' ? incident.sys_id.value : incident.sys_id}>
+                                <tr key={rawValue(incident.sys_id)}>
                                     <td>{number}</td>
                                     <td>{shortDesc}</td>
                                     <td>

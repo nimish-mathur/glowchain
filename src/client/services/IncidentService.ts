@@ -1,3 +1,5 @@
+import type { IncidentFormData, IncidentRecord } from '../types'
+
 // Extend Window interface to include g_ck property
 declare global {
     interface Window {
@@ -13,7 +15,7 @@ export class IncidentService {
     }
 
     // Return all incidents
-    async list() {
+    async list(): Promise<IncidentRecord[]> {
         try {
             const searchParams = new URLSearchParams()
             searchParams.set('sysparm_display_value', 'all')
@@ -42,7 +44,7 @@ export class IncidentService {
     }
 
     // Get a single incident by sys_id
-    async get(sysId) {
+    async get(sysId: string): Promise<IncidentRecord> {
         try {
             const searchParams = new URLSearchParams()
             searchParams.set('sysparm_display_value', 'all')
@@ -69,7 +71,7 @@ export class IncidentService {
     }
 
     // Create a new incident
-    async create(data) {
+    async create(data: IncidentFormData): Promise<{ result: IncidentRecord }> {
         try {
             const response = await fetch(`/api/now/table/${this.tableName}`, {
                 method: 'POST',
@@ -78,10 +80,7 @@ export class IncidentService {
                     Accept: 'application/json',
                     'X-UserToken': window.g_ck,
                 },
-                body: JSON.stringify({
-                    ...data,
-                    caller_id: '6816f79cc0a8016401c5a33be04be441',
-                }),
+                body: JSON.stringify(data),
             })
 
             if (!response.ok) {
@@ -97,7 +96,7 @@ export class IncidentService {
     }
 
     // Update an incident
-    async update(sysId, data) {
+    async update(sysId: string, data: Partial<IncidentFormData>): Promise<{ result: IncidentRecord }> {
         try {
             const response = await fetch(`/api/now/table/${this.tableName}/${sysId}`, {
                 method: 'PATCH',
@@ -122,7 +121,7 @@ export class IncidentService {
     }
 
     // Delete an incident
-    async delete(sysId) {
+    async delete(sysId: string): Promise<boolean> {
         try {
             const response = await fetch(`/api/now/table/${this.tableName}/${sysId}`, {
                 method: 'DELETE',

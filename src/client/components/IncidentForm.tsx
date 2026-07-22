@@ -1,11 +1,19 @@
 import React, { useState, useEffect } from 'react'
 import './IncidentForm.css'
+import type { IncidentFormData, IncidentRecord } from '../types'
+import { rawValue, displayValue } from '../types'
 
-export default function IncidentForm({ incident, onSubmit, onCancel }) {
+interface IncidentFormProps {
+    incident: IncidentRecord | null
+    onSubmit: (data: IncidentFormData) => void
+    onCancel: () => void
+}
+
+export default function IncidentForm({ incident, onSubmit, onCancel }: IncidentFormProps) {
     const isEditing = !!incident
 
     // Initialize form state
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<IncidentFormData>({
         short_description: '',
         description: '',
         state: '1',
@@ -16,14 +24,10 @@ export default function IncidentForm({ incident, onSubmit, onCancel }) {
     useEffect(() => {
         if (incident) {
             // Extract primitive values from potential objects
-            const shortDesc =
-                typeof incident.short_description === 'object'
-                    ? incident.short_description.value
-                    : incident.short_description
-            const description =
-                typeof incident.description === 'object' ? incident.description.value : incident.description
-            const state = typeof incident.state === 'object' ? incident.state.value : incident.state
-            const impact = typeof incident.impact === 'object' ? incident.impact.value : incident.impact
+            const shortDesc = rawValue(incident.short_description)
+            const description = incident.description ? rawValue(incident.description) : ''
+            const state = rawValue(incident.state)
+            const impact = rawValue(incident.impact)
 
             setFormData({
                 short_description: shortDesc || '',
@@ -34,7 +38,7 @@ export default function IncidentForm({ incident, onSubmit, onCancel }) {
         }
     }, [incident])
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target
         setFormData((prev) => ({
             ...prev,
@@ -42,7 +46,7 @@ export default function IncidentForm({ incident, onSubmit, onCancel }) {
         }))
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         onSubmit(formData)
     }
@@ -51,7 +55,7 @@ export default function IncidentForm({ incident, onSubmit, onCancel }) {
         <div className="form-overlay">
             <div className="form-container">
                 <div className="form-header">
-                    <h2>{isEditing ? `Edit ${incident.number.display_value}` : 'Create New Incident'}</h2>
+                    <h2>{incident ? `Edit ${displayValue(incident.number)}` : 'Create New Incident'}</h2>
                     <button type="button" className="close-button" onClick={onCancel}>
                         ×
                     </button>
