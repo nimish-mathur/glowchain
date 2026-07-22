@@ -40,4 +40,4 @@ scoped ServiceNow application on a Personal Developer Instance (PDI).
 
 ## Author
 
-Nimish Mathur — ServiceNow ITSM & Power BI
+Nimish Mathur
